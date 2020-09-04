@@ -1,0 +1,53 @@
+> dog = { name = "Tucker", age = 11 }
+{ age = 11, name = "Tucker" } : { age : number, name : String }
+
+> dog.name
+"Tucker" : String
+
+> dog.age
+11 : number
+
+> dog["name"]
+-- TOO MANY ARGS -------------------------------------------------------- elm
+
+The `dog` value is not a function, but it was given 1 argument.
+
+5|   dog["name"]
+
+> .name
+<function> : { b | name : a } -> a
+
+> .name dog
+"Tucker" : String
+
+> .age dog
+11 : number
+
+> dog.breed = "Sheltie"
+-- PARSE ERROR ---------------------------------------------------------- elm
+
+I was not expecting this equals sign while parsing repl_value_3's definition.
+
+4| repl_value_3 =
+5|   dog.breed = "Sheltie"
+               ^
+Maybe this is supposed to be a separate definition? If so, it is indented too
+far. Spaces are not allowed before top-level definitions.
+
+> dog.name = "Rover"
+> dog.age = 12
+
+> haveBirthday d = { name = d.name, age = d.age + 1 }
+<function>
+    : { b | age : number, name : a } -> { age : number, name : a }
+
+> haveBirthday d = { d | age = d.age + 1 }
+<function> : { a | age : number } -> { a | age : number }
+
+> olderDog = haveBirthday dog
+{ age = 12, name = "Tucker" } : { age : number, name : String }
+
+> dog
+{ age = 11, name = "Tucker" } : { age : number, name : String }
+
+> { dog | breed = "Sheltie" }
