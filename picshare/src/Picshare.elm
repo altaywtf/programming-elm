@@ -4,6 +4,8 @@ import Browser
 import Html exposing (Html, button, div, form, h1, h2, i, img, input, li, strong, text, ul)
 import Html.Attributes exposing (class, disabled, placeholder, src, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
+import Json.Decode exposing (Decoder, bool, int, list, string, succeed)
+import Json.Decode.Pipeline exposing (hardcoded, required)
 
 
 baseUrl : String
@@ -27,6 +29,17 @@ type alias Photo =
 
 type alias Model =
     Photo
+
+
+photoDecoder : Decoder Photo
+photoDecoder =
+    succeed Photo
+        |> required "id" int
+        |> required "url" string
+        |> required "caption" string
+        |> required "liked" bool
+        |> required "comments" (list string)
+        |> hardcoded ""
 
 
 initialModel : Model
