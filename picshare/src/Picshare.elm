@@ -4,6 +4,7 @@ import Browser
 import Html exposing (Html, button, div, form, h1, h2, i, img, input, li, strong, text, ul)
 import Html.Attributes exposing (class, disabled, placeholder, src, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
+import Http
 import Json.Decode exposing (Decoder, bool, int, list, string, succeed)
 import Json.Decode.Pipeline exposing (hardcoded, required)
 
@@ -31,6 +32,13 @@ type alias Model =
     Photo
 
 
+type Msg
+    = ToggleLike
+    | UpdateComment String
+    | SaveComment
+    | LoadFeed (Result Http.Error Photo)
+
+
 photoDecoder : Decoder Photo
 photoDecoder =
     succeed Photo
@@ -53,10 +61,12 @@ initialModel =
     }
 
 
-type Msg
-    = ToggleLike
-    | UpdateComment String
-    | SaveComment
+fetchFeed : Cmd Msg
+fetchFeed =
+    Http.get
+        { url = baseUrl ++ "feed/1"
+        , expect = Http.expectJson LoadFeed photoDecoder
+        }
 
 
 saveNewComment : Model -> Model
@@ -76,17 +86,25 @@ saveNewComment model =
             }
 
 
-update : Msg -> Model -> Model
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         ToggleLike ->
-            { model | liked = not model.liked }
+            ( { model | liked = not model.liked }, Cmd.none )
 
         UpdateComment newComment ->
-            { model | newComment = newComment }
+            ( { model | newComment = newComment }, Cmd.none )
 
         SaveComment ->
-            saveNewComment model
+            ( saveNewComment model, Cmd.none )
+
+        LoadFeed _ ->
+            ( model, Cmd.none )
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.none
 
 
 viewLoveButton : Model -> Html Msg
@@ -176,10 +194,16 @@ view model =
         ]
 
 
+init : () -> ( Model, Cmd Msg )
+init () =
+    ( initialModel, fetchFeed )
+
+
 main : Program () Model Msg
 main =
-    Browser.sandbox
-        { init = initialModel
+    Browser.element
+        { init = init
         , view = view
         , update = update
+        , subscriptions = subscriptions
         }
