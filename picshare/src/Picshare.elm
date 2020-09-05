@@ -29,8 +29,7 @@ type alias Photo =
 
 
 type alias Model =
-    { photo : Maybe Photo
-    }
+    { photo : Maybe Photo }
 
 
 type Msg
@@ -61,16 +60,7 @@ photoDecoder =
 
 initialModel : Model
 initialModel =
-    { photo =
-        Just
-            { id = 1
-            , url = baseUrl ++ "1.jpg"
-            , caption = "Surfing"
-            , liked = False
-            , comments = [ "hey" ]
-            , newComment = ""
-            }
-    }
+    { photo = Nothing }
 
 
 
@@ -133,7 +123,10 @@ update msg model =
         SaveComment ->
             ( { model | photo = updateFeed saveNewComment model.photo }, Cmd.none )
 
-        LoadFeed _ ->
+        LoadFeed (Ok photo) ->
+            ( { model | photo = Just photo }, Cmd.none )
+
+        LoadFeed (Err _) ->
             ( model, Cmd.none )
 
 
@@ -226,6 +219,12 @@ viewDetailedPhoto photo =
         ]
 
 
+viewFeedEmptyState : Html Msg
+viewFeedEmptyState =
+    div [ class "loading-feed" ]
+        [ text "Loading Feed..." ]
+
+
 viewFeed : Maybe Photo -> Html Msg
 viewFeed maybePhoto =
     case maybePhoto of
@@ -233,7 +232,7 @@ viewFeed maybePhoto =
             viewDetailedPhoto photo
 
         Nothing ->
-            text ""
+            viewFeedEmptyState
 
 
 view : Model -> Html Msg

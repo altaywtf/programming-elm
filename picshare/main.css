@@ -1,19 +1,21 @@
-@import url('https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i');
+@import url("https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i");
 
 body {
   background: #fff;
   color: #333;
-  font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 14px;
   width: 100%;
 }
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
 }
 
-button:focus, input:focus {
+button:focus,
+input:focus {
   outline: none;
 }
 
@@ -114,6 +116,8 @@ ul {
 .detailed-photo img {
   display: block;
   width: 100%;
+  min-height: 346px;
+  background-color: #eee;
 }
 
 .detailed-photo .username {
@@ -213,7 +217,8 @@ ul {
   text-align: center;
 }
 
-.account, .account * {
+.account,
+.account * {
   box-sizing: border-box;
 }
 
