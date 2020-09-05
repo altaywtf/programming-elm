@@ -33,7 +33,9 @@ type alias Feed =
 
 
 type alias Model =
-    { feed : Maybe Feed }
+    { feed : Maybe Feed
+    , error : Maybe Http.Error
+    }
 
 
 type Msg
@@ -64,7 +66,7 @@ photoDecoder =
 
 initialModel : Model
 initialModel =
-    { feed = Nothing }
+    { feed = Nothing, error = Nothing }
 
 
 
@@ -143,8 +145,8 @@ update msg model =
         LoadFeed (Ok feed) ->
             ( { model | feed = Just feed }, Cmd.none )
 
-        LoadFeed (Err _) ->
-            ( model, Cmd.none )
+        LoadFeed (Err error) ->
+            ( { model | error = Just error }, Cmd.none )
 
 
 
@@ -236,20 +238,56 @@ viewDetailedPhoto photo =
         ]
 
 
+viewFeedLoadingState : Html Msg
+viewFeedLoadingState =
+    div [ class "loading-feed" ]
+        [ text "Loading Feed..." ]
+
+
 viewFeedEmptyState : Html Msg
 viewFeedEmptyState =
     div [ class "loading-feed" ]
-        [ text "Loading Feed..." ]
+        [ text "No photos :(" ]
 
 
 viewFeed : Maybe Feed -> Html Msg
 viewFeed maybeFeed =
     case maybeFeed of
         Just feed ->
-            div [] (List.map viewDetailedPhoto feed)
+            case feed of
+                [] ->
+                    viewFeedEmptyState
+
+                _ ->
+                    div [] (List.map viewDetailedPhoto feed)
 
         Nothing ->
-            viewFeedEmptyState
+            viewFeedLoadingState
+
+
+viewFeedErrorState : Http.Error -> Html Msg
+viewFeedErrorState error =
+    let
+        errorMessage =
+            case error of
+                Http.BadBody _ ->
+                    "Bad Body 😟"
+
+                _ ->
+                    "Oops, an error occurred 😉"
+    in
+    div [ class "feed-error" ]
+        [ text errorMessage ]
+
+
+viewContent : Model -> Html Msg
+viewContent model =
+    case model.error of
+        Just error ->
+            viewFeedErrorState error
+
+        Nothing ->
+            viewFeed model.feed
 
 
 view : Model -> Html Msg
@@ -259,7 +297,7 @@ view model =
         [ div [ class "header" ]
             [ h1 [] [ text "Picshare" ] ]
         , div [ class "content-flow" ]
-            [ viewFeed model.feed ]
+            [ viewContent model ]
         ]
 
 
