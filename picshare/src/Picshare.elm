@@ -29,7 +29,8 @@ type alias Photo =
 
 
 type alias Model =
-    Photo
+    { photo : Maybe Photo
+    }
 
 
 type Msg
@@ -37,6 +38,10 @@ type Msg
     | UpdateComment String
     | SaveComment
     | LoadFeed (Result Http.Error Photo)
+
+
+
+-- Decoders
 
 
 photoDecoder : Decoder Photo
@@ -50,15 +55,26 @@ photoDecoder =
         |> hardcoded ""
 
 
+
+-- Model
+
+
 initialModel : Model
 initialModel =
-    { id = 1
-    , url = baseUrl ++ "1.jpg"
-    , caption = "Surfing"
-    , liked = False
-    , comments = [ "hey" ]
-    , newComment = ""
+    { photo =
+        Just
+            { id = 1
+            , url = baseUrl ++ "1.jpg"
+            , caption = "Surfing"
+            , liked = False
+            , comments = [ "hey" ]
+            , newComment = ""
+            }
     }
+
+
+
+-- Commands
 
 
 fetchFeed : Cmd Msg
@@ -69,37 +85,60 @@ fetchFeed =
         }
 
 
-saveNewComment : Model -> Model
-saveNewComment model =
+
+-- Update
+
+
+toggleLike : Photo -> Photo
+toggleLike photo =
+    { photo | liked = not photo.liked }
+
+
+updateComment : String -> Photo -> Photo
+updateComment newComment photo =
+    { photo | newComment = newComment }
+
+
+saveNewComment : Photo -> Photo
+saveNewComment photo =
     let
         formattedComment =
-            String.trim model.newComment
+            String.trim photo.newComment
     in
     case formattedComment of
         "" ->
-            model
+            photo
 
         _ ->
-            { model
-                | comments = model.comments ++ [ formattedComment ]
+            { photo
+                | comments = photo.comments ++ [ formattedComment ]
                 , newComment = ""
             }
+
+
+updateFeed : (Photo -> Photo) -> Maybe Photo -> Maybe Photo
+updateFeed updatePhoto maybePhoto =
+    Maybe.map updatePhoto maybePhoto
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         ToggleLike ->
-            ( { model | liked = not model.liked }, Cmd.none )
+            ( { model | photo = updateFeed toggleLike model.photo }, Cmd.none )
 
         UpdateComment newComment ->
-            ( { model | newComment = newComment }, Cmd.none )
+            ( { model | photo = updateFeed (updateComment newComment) model.photo }, Cmd.none )
 
         SaveComment ->
-            ( saveNewComment model, Cmd.none )
+            ( { model | photo = updateFeed saveNewComment model.photo }, Cmd.none )
 
         LoadFeed _ ->
             ( model, Cmd.none )
+
+
+
+-- Subscriptions
 
 
 subscriptions : Model -> Sub Msg
@@ -107,11 +146,15 @@ subscriptions model =
     Sub.none
 
 
-viewLoveButton : Model -> Html Msg
-viewLoveButton model =
+
+-- View
+
+
+viewLoveButton : Photo -> Html Msg
+viewLoveButton photo =
     let
         buttonClass =
-            if model.liked then
+            if photo.liked then
                 "fa-heart"
 
             else
@@ -163,24 +206,34 @@ viewNewCommentForm newComment =
         ]
 
 
-viewComments : Model -> Html Msg
-viewComments model =
+viewComments : Photo -> Html Msg
+viewComments photo =
     div []
-        [ viewCommentList model.comments
-        , viewNewCommentForm model.newComment
+        [ viewCommentList photo.comments
+        , viewNewCommentForm photo.newComment
         ]
 
 
-viewDetailedPhoto : Model -> Html Msg
-viewDetailedPhoto model =
+viewDetailedPhoto : Photo -> Html Msg
+viewDetailedPhoto photo =
     div [ class "detailed-photo" ]
-        [ img [ src model.url ] []
+        [ img [ src photo.url ] []
         , div [ class "photo-info" ]
-            [ viewLoveButton model
-            , h2 [ class "caption" ] [ text model.caption ]
-            , viewComments model
+            [ viewLoveButton photo
+            , h2 [ class "caption" ] [ text photo.caption ]
+            , viewComments photo
             ]
         ]
+
+
+viewFeed : Maybe Photo -> Html Msg
+viewFeed maybePhoto =
+    case maybePhoto of
+        Just photo ->
+            viewDetailedPhoto photo
+
+        Nothing ->
+            text ""
 
 
 view : Model -> Html Msg
@@ -190,8 +243,12 @@ view model =
         [ div [ class "header" ]
             [ h1 [] [ text "Picshare" ] ]
         , div [ class "content-flow" ]
-            [ viewDetailedPhoto model ]
+            [ viewFeed model.photo ]
         ]
+
+
+
+-- Main
 
 
 init : () -> ( Model, Cmd Msg )
