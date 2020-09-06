@@ -177,7 +177,7 @@ update msg model =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
+subscriptions _ =
     WebSocket.receive (LoadStreamPhoto << decodeString photoDecoder)
 
 
