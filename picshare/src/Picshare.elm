@@ -164,7 +164,12 @@ update msg model =
             ( model, Cmd.none )
 
         FlushStreamQueue ->
-            ( model, Cmd.none )
+            ( { model
+                | feed = Maybe.map ((++) model.streamQueue) model.feed
+                , streamQueue = []
+              }
+            , Cmd.none
+            )
 
 
 
@@ -298,6 +303,20 @@ viewFeedErrorState error =
         [ text errorMessage ]
 
 
+viewStreamNotification : Feed -> Html Msg
+viewStreamNotification queue =
+    case queue of
+        [] ->
+            text ""
+
+        _ ->
+            let
+                content =
+                    "View new photos: " ++ String.fromInt (List.length queue)
+            in
+            div [ class "stream-notification", onClick FlushStreamQueue ] [ text content ]
+
+
 viewContent : Model -> Html Msg
 viewContent model =
     case model.error of
@@ -305,7 +324,10 @@ viewContent model =
             viewFeedErrorState error
 
         Nothing ->
-            viewFeed model.feed
+            div []
+                [ viewStreamNotification model.streamQueue
+                , viewFeed model.feed
+                ]
 
 
 view : Model -> Html Msg
