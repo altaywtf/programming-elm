@@ -51,6 +51,7 @@ type Msg
     | SaveComment Id
     | LoadFeed (Result Http.Error Feed)
     | LoadStreamPhoto (Result Json.Decode.Error Photo)
+    | FlushStreamQueue
 
 
 
@@ -156,7 +157,13 @@ update msg model =
         LoadFeed (Err error) ->
             ( { model | error = Just error }, Cmd.none )
 
-        LoadStreamPhoto data ->
+        LoadStreamPhoto (Ok photo) ->
+            ( { model | streamQueue = photo :: model.streamQueue }, Cmd.none )
+
+        LoadStreamPhoto (Err _) ->
+            ( model, Cmd.none )
+
+        FlushStreamQueue ->
             ( model, Cmd.none )
 
 
