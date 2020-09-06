@@ -397,21 +397,25 @@ viewConfirmation model =
         ]
 
 
+viewStep : Model -> Html Msg
+viewStep model =
+    if model.sending then
+        viewSending
+
+    else if model.building then
+        viewBuilding model
+
+    else
+        viewConfirmation model
+
+
 view : Model -> Html Msg
 view model =
     div []
         [ h1 [ class "header" ]
             [ text "Saladise - Build a Salad" ]
         , div [ class "content" ]
-            [ if model.sending then
-                viewSending
-
-              else if model.building then
-                viewBuilding model
-
-              else
-                viewConfirmation model
-            ]
+            [ viewStep model ]
         ]
 
 
