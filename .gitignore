@@ -7,3 +7,5 @@ repl-temp-*
 # static output
 dist
 
+# 💩
+node_modules
