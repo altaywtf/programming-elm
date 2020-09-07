@@ -24,6 +24,7 @@ import Html.Attributes exposing (checked, class, disabled, name, type_, value)
 import Html.Events exposing (onCheck, onClick, onInput)
 import Http
 import Json.Encode exposing (Value, list, object, string)
+import Platform.Cmd exposing (Cmd)
 import Regex
 import Set exposing (Set)
 
@@ -97,14 +98,19 @@ dressingToString dressing =
             "Oil and Vinegar"
 
 
+type alias Salad =
+    { base : Base
+    , toppings : Set String
+    , dressing : Dressing
+    }
+
+
 type alias Model =
     { building : Bool
     , sending : Bool
     , success : Bool
     , error : Maybe String
-    , base : Base
-    , toppings : Set String
-    , dressing : Dressing
+    , salad : Salad
     , name : String
     , email : String
     , phone : String
@@ -117,9 +123,11 @@ initialModel =
     , sending = False
     , success = False
     , error = Nothing
-    , base = Lettuce
-    , toppings = Set.empty
-    , dressing = NoDressing
+    , salad =
+        { base = Lettuce
+        , toppings = Set.empty
+        , dressing = NoDressing
+        }
     , name = ""
     , email = ""
     , phone = ""
@@ -212,8 +220,8 @@ viewBuilding model =
                 [ input
                     [ type_ "radio"
                     , name "base"
-                    , checked (model.base == Lettuce)
-                    , onClick (SetBase Lettuce)
+                    , checked (model.salad.base == Lettuce)
+                    , onClick (SaladMsg (SetBase Lettuce))
                     ]
                     []
                 , text "Lettuce"
@@ -222,8 +230,8 @@ viewBuilding model =
                 [ input
                     [ type_ "radio"
                     , name "base"
-                    , checked (model.base == Spinach)
-                    , onClick (SetBase Spinach)
+                    , checked (model.salad.base == Spinach)
+                    , onClick (SaladMsg (SetBase Spinach))
                     ]
                     []
                 , text "Spinach"
@@ -232,8 +240,8 @@ viewBuilding model =
                 [ input
                     [ type_ "radio"
                     , name "base"
-                    , checked (model.base == SpringMix)
-                    , onClick (SetBase SpringMix)
+                    , checked (model.salad.base == SpringMix)
+                    , onClick (SaladMsg (SetBase SpringMix))
                     ]
                     []
                 , text "Spring Mix"
@@ -244,8 +252,8 @@ viewBuilding model =
             , label [ class "select-option" ]
                 [ input
                     [ type_ "checkbox"
-                    , checked (Set.member (toppingToString Tomatoes) model.toppings)
-                    , onCheck (ToggleTopping Tomatoes)
+                    , checked (Set.member (toppingToString Tomatoes) model.salad.toppings)
+                    , onCheck (SaladMsg << ToggleTopping Tomatoes)
                     ]
                     []
                 , text "Tomatoes"
@@ -253,8 +261,8 @@ viewBuilding model =
             , label [ class "select-option" ]
                 [ input
                     [ type_ "checkbox"
-                    , checked (Set.member (toppingToString Cucumbers) model.toppings)
-                    , onCheck (ToggleTopping Cucumbers)
+                    , checked (Set.member (toppingToString Cucumbers) model.salad.toppings)
+                    , onCheck (SaladMsg << ToggleTopping Cucumbers)
                     ]
                     []
                 , text "Cucumbers"
@@ -262,8 +270,8 @@ viewBuilding model =
             , label [ class "select-option" ]
                 [ input
                     [ type_ "checkbox"
-                    , checked (Set.member (toppingToString Onions) model.toppings)
-                    , onCheck (ToggleTopping Onions)
+                    , checked (Set.member (toppingToString Onions) model.salad.toppings)
+                    , onCheck (SaladMsg << ToggleTopping Onions)
                     ]
                     []
                 , text "Onions"
@@ -275,8 +283,8 @@ viewBuilding model =
                 [ input
                     [ type_ "radio"
                     , name "dressing"
-                    , checked (model.dressing == NoDressing)
-                    , onClick (SetDressing NoDressing)
+                    , checked (model.salad.dressing == NoDressing)
+                    , onClick (SaladMsg (SetDressing NoDressing))
                     ]
                     []
                 , text "None"
@@ -285,8 +293,8 @@ viewBuilding model =
                 [ input
                     [ type_ "radio"
                     , name "dressing"
-                    , checked (model.dressing == Italian)
-                    , onClick (SetDressing Italian)
+                    , checked (model.salad.dressing == Italian)
+                    , onClick (SaladMsg (SetDressing Italian))
                     ]
                     []
                 , text "Italian"
@@ -295,8 +303,8 @@ viewBuilding model =
                 [ input
                     [ type_ "radio"
                     , name "dressing"
-                    , checked (model.dressing == RaspberryVinaigrette)
-                    , onClick (SetDressing RaspberryVinaigrette)
+                    , checked (model.salad.dressing == RaspberryVinaigrette)
+                    , onClick (SaladMsg (SetDressing RaspberryVinaigrette))
                     ]
                     []
                 , text "Raspberry Vinaigrette"
@@ -305,8 +313,8 @@ viewBuilding model =
                 [ input
                     [ type_ "radio"
                     , name "dressing"
-                    , checked (model.dressing == OilVinegar)
-                    , onClick (SetDressing OilVinegar)
+                    , checked (model.salad.dressing == OilVinegar)
+                    , onClick (SaladMsg (SetDressing OilVinegar))
                     ]
                     []
                 , text "Oil and Vinegar"
@@ -365,13 +373,13 @@ viewConfirmation model =
         , table []
             [ tr []
                 [ th [] [ text "Base:" ]
-                , td [] [ text (baseToString model.base) ]
+                , td [] [ text (baseToString model.salad.base) ]
                 ]
             , tr []
                 [ th [] [ text "Toppings:" ]
                 , td []
                     [ ul []
-                        (model.toppings
+                        (model.salad.toppings
                             |> Set.toList
                             |> List.map (\topping -> li [] [ text topping ])
                         )
@@ -379,7 +387,7 @@ viewConfirmation model =
                 ]
             , tr []
                 [ th [] [ text "Dressing:" ]
-                , td [] [ text (dressingToString model.dressing) ]
+                , td [] [ text (dressingToString model.salad.dressing) ]
                 ]
             , tr []
                 [ th [] [ text "Name:" ]
@@ -423,10 +431,14 @@ view model =
 ---- UPDATE ----
 
 
-type Msg
+type SaladMsg
     = SetBase Base
     | ToggleTopping Topping Bool
     | SetDressing Dressing
+
+
+type Msg
+    = SaladMsg SaladMsg
     | SetName String
     | SetEmail String
     | SetPhone String
@@ -442,9 +454,9 @@ sendUrl =
 encodeOrder : Model -> Value
 encodeOrder model =
     object
-        [ ( "base", string (baseToString model.base) )
-        , ( "toppings", list string (Set.toList model.toppings) )
-        , ( "dressing", string (dressingToString model.dressing) )
+        [ ( "base", string (baseToString model.salad.base) )
+        , ( "toppings", list string (Set.toList model.salad.toppings) )
+        , ( "dressing", string (dressingToString model.salad.dressing) )
         , ( "name", string model.name )
         , ( "email", string model.email )
         , ( "phone", string model.phone )
@@ -460,13 +472,11 @@ send model =
         }
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
+updateSalad : SaladMsg -> Salad -> Salad
+updateSalad msg salad =
     case msg of
         SetBase base ->
-            ( { model | base = base }
-            , Cmd.none
-            )
+            { salad | base = base }
 
         ToggleTopping topping add ->
             let
@@ -477,14 +487,17 @@ update msg model =
                     else
                         Set.remove
             in
-            ( { model | toppings = updater (toppingToString topping) model.toppings }
-            , Cmd.none
-            )
+            { salad | toppings = updater (toppingToString topping) salad.toppings }
 
         SetDressing dressing ->
-            ( { model | dressing = dressing }
-            , Cmd.none
-            )
+            { salad | dressing = dressing }
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
+    case msg of
+        SaladMsg saladMsg ->
+            ( { model | salad = updateSalad saladMsg model.salad }, Cmd.none )
 
         SetName name ->
             ( { model | name = name }
