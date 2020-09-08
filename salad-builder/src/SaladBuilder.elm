@@ -105,12 +105,24 @@ type alias Salad =
     }
 
 
+type alias Contact c =
+    { c
+        | name : String
+        , email : String
+        , phone : String
+    }
+
+
 type alias Model =
     { building : Bool
     , sending : Bool
     , success : Bool
     , error : Maybe String
+
+    --- ch6. nested state ---
     , salad : Salad
+
+    --- ch6. extensible records --
     , name : String
     , email : String
     , phone : String
@@ -328,7 +340,7 @@ viewBuilding model =
                     , input
                         [ type_ "text"
                         , value model.name
-                        , onInput SetName
+                        , onInput (ContactMsg << SetName)
                         ]
                         []
                     ]
@@ -339,7 +351,7 @@ viewBuilding model =
                     , input
                         [ type_ "text"
                         , value model.email
-                        , onInput SetEmail
+                        , onInput (ContactMsg << SetEmail)
                         ]
                         []
                     ]
@@ -350,7 +362,7 @@ viewBuilding model =
                     , input
                         [ type_ "text"
                         , value model.phone
-                        , onInput SetPhone
+                        , onInput (ContactMsg << SetPhone)
                         ]
                         []
                     ]
@@ -437,11 +449,15 @@ type SaladMsg
     | SetDressing Dressing
 
 
-type Msg
-    = SaladMsg SaladMsg
-    | SetName String
+type ContactMsg
+    = SetName String
     | SetEmail String
     | SetPhone String
+
+
+type Msg
+    = SaladMsg SaladMsg
+    | ContactMsg ContactMsg
     | Send
     | SubmissionResult (Result Http.Error String)
 
@@ -493,26 +509,27 @@ updateSalad msg salad =
             { salad | dressing = dressing }
 
 
+updateContact : ContactMsg -> Contact c -> Contact c
+updateContact msg contact =
+    case msg of
+        SetName name ->
+            { contact | name = name }
+
+        SetEmail email ->
+            { contact | email = email }
+
+        SetPhone phone ->
+            { contact | phone = phone }
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         SaladMsg saladMsg ->
             ( { model | salad = updateSalad saladMsg model.salad }, Cmd.none )
 
-        SetName name ->
-            ( { model | name = name }
-            , Cmd.none
-            )
-
-        SetEmail email ->
-            ( { model | email = email }
-            , Cmd.none
-            )
-
-        SetPhone phone ->
-            ( { model | phone = phone }
-            , Cmd.none
-            )
+        ContactMsg contactMsg ->
+            ( updateContact contactMsg model, Cmd.none )
 
         Send ->
             let
