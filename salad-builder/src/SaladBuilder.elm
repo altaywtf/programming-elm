@@ -228,20 +228,20 @@ viewSection heading children =
         (h2 [] [ text heading ] :: children)
 
 
-viewToppingOption : Set String -> Topping -> Html Msg
+viewToppingOption : Set String -> Topping -> Html SaladMsg
 viewToppingOption toppings topping =
     label [ class "select-option" ]
         [ input
             [ type_ "checkbox"
             , checked (Set.member (toppingToString topping) toppings)
-            , onCheck (SaladMsgWrapper << ToggleTopping topping)
+            , onCheck (ToggleTopping topping)
             ]
             []
         , text (toppingToString topping)
         ]
 
 
-viewSelectToppings : Set String -> Html Msg
+viewSelectToppings : Set String -> Html SaladMsg
 viewSelectToppings toppings =
     div [] (List.map (viewToppingOption toppings) [ Tomatoes, Cucumbers, Onions ])
 
@@ -260,20 +260,20 @@ viewRadioOption radioName selectedValue tagger optionLabel value =
         ]
 
 
-viewSelectBase : Base -> Html Msg
+viewSelectBase : Base -> Html SaladMsg
 viewSelectBase currentBase =
     let
         viewBaseOption value =
-            viewRadioOption "base" currentBase (SaladMsgWrapper << SetBase) (baseToString value) value
+            viewRadioOption "base" currentBase SetBase (baseToString value) value
     in
     div [] (List.map viewBaseOption [ Lettuce, Spinach, SpringMix ])
 
 
-viewSelectDressing : Dressing -> Html Msg
+viewSelectDressing : Dressing -> Html SaladMsg
 viewSelectDressing currentDressing =
     let
         viewDressingOption value =
-            viewRadioOption "dressing" currentDressing (SaladMsgWrapper << SetDressing) (dressingToString value) value
+            viewRadioOption "dressing" currentDressing SetDressing (dressingToString value) value
     in
     div [] (List.map viewDressingOption [ NoDressing, Italian, RaspberryVinaigrette, OilVinegar ])
 
@@ -306,9 +306,9 @@ viewBuilding : Model -> Html Msg
 viewBuilding model =
     div []
         [ viewError model.error
-        , viewSection "1. Select Base" [ viewSelectBase model.salad.base ]
-        , viewSection "2. Select Toppings" [ viewSelectToppings model.salad.toppings ]
-        , viewSection "3. Select Dressing" [ viewSelectDressing model.salad.dressing ]
+        , viewSection "1. Select Base" [ Html.map SaladMsgWrapper (viewSelectBase model.salad.base) ]
+        , viewSection "2. Select Toppings" [ Html.map SaladMsgWrapper (viewSelectToppings model.salad.toppings) ]
+        , viewSection "3. Select Dressing" [ Html.map SaladMsgWrapper (viewSelectDressing model.salad.dressing) ]
         , viewSection "4. Enter Contact Info" [ Html.map ContactMsgWrapper (viewContactForm model) ]
         , button
             [ class "send-button"
