@@ -37,6 +37,12 @@ type alias Error =
     String
 
 
+type Step
+    = Building (Maybe Error)
+    | Sending
+    | Confirmation
+
+
 type Base
     = Lettuce
     | Spinach
@@ -106,6 +112,7 @@ type alias Salad =
 
 
 type alias Contact c =
+    --- ch6. extensible records -
     { c
         | name : String
         , email : String
@@ -114,10 +121,7 @@ type alias Contact c =
 
 
 type alias Model =
-    { building : Bool
-    , sending : Bool
-    , success : Bool
-    , error : Maybe String
+    { step : Step
 
     --- ch6. nested state ---
     , salad : Salad
@@ -131,15 +135,16 @@ type alias Model =
 
 initialModel : Model
 initialModel =
-    { building = True
-    , sending = False
-    , success = False
-    , error = Nothing
+    { step = Building Nothing
+
+    --- ch6. nested state ---
     , salad =
         { base = Lettuce
         , toppings = Set.empty
         , dressing = NoDressing
         }
+
+    --- ch6. extensible records -
     , name = ""
     , email = ""
     , phone = ""
@@ -302,10 +307,10 @@ viewContactForm contact =
         ]
 
 
-viewBuilding : Model -> Html Msg
-viewBuilding model =
+viewBuilding : Maybe Error -> Model -> Html Msg
+viewBuilding maybeError model =
     div []
-        [ viewError model.error
+        [ viewError maybeError
         , viewSection "1. Select Base" [ Html.map SaladMsgWrapper (viewSelectBase model.salad.base) ]
         , viewSection "2. Select Toppings" [ Html.map SaladMsgWrapper (viewSelectToppings model.salad.toppings) ]
         , viewSection "3. Select Dressing" [ Html.map SaladMsgWrapper (viewSelectDressing model.salad.dressing) ]
@@ -361,14 +366,15 @@ viewConfirmation model =
 
 viewStep : Model -> Html Msg
 viewStep model =
-    if model.sending then
-        viewSending
+    case model.step of
+        Building error ->
+            viewBuilding error model
 
-    else if model.building then
-        viewBuilding model
+        Sending ->
+            viewSending
 
-    else
-        viewConfirmation model
+        Confirmation ->
+            viewConfirmation model
 
 
 view : Model -> Html Msg
@@ -476,31 +482,19 @@ update msg model =
         Send ->
             let
                 newModel =
-                    { model
-                        | building = False
-                        , sending = True
-                        , error = Nothing
-                    }
+                    { model | step = Sending }
             in
             ( newModel
             , send newModel
             )
 
         SubmissionResult (Ok _) ->
-            ( { model
-                | sending = False
-                , success = True
-                , error = Nothing
-              }
+            ( { model | step = Confirmation }
             , Cmd.none
             )
 
         SubmissionResult (Err _) ->
-            ( { model
-                | building = True
-                , sending = False
-                , error = Just "There was a problem sending your order. Please try again."
-              }
+            ( { model | step = Building (Just "There was a problem sending your order. Please try again.") }
             , Cmd.none
             )
 
