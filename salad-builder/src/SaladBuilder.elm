@@ -309,15 +309,13 @@ viewBuilding model =
         , viewSection "1. Select Base" [ viewSelectBase model.salad.base ]
         , viewSection "2. Select Toppings" [ viewSelectToppings model.salad.toppings ]
         , viewSection "3. Select Dressing" [ viewSelectDressing model.salad.dressing ]
-        , viewSection "4. Enter Contact Info"
-            [ Html.map ContactMsgWrapper (viewContactForm model)
-            , button
-                [ class "send-button"
-                , disabled (not (isValid model))
-                , onClick Send
-                ]
-                [ text "Send Order" ]
+        , viewSection "4. Enter Contact Info" [ Html.map ContactMsgWrapper (viewContactForm model) ]
+        , button
+            [ class "send-button"
+            , disabled (not (isValid model))
+            , onClick Send
             ]
+            [ text "Send Order" ]
         ]
 
 
