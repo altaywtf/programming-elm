@@ -234,7 +234,7 @@ viewToppingOption toppings topping =
         [ input
             [ type_ "checkbox"
             , checked (Set.member (toppingToString topping) toppings)
-            , onCheck (SaladMsg << ToggleTopping topping)
+            , onCheck (SaladMsgWrapper << ToggleTopping topping)
             ]
             []
         , text (toppingToString topping)
@@ -264,7 +264,7 @@ viewSelectBase : Base -> Html Msg
 viewSelectBase currentBase =
     let
         viewBaseOption value =
-            viewRadioOption "base" currentBase (SaladMsg << SetBase) (baseToString value) value
+            viewRadioOption "base" currentBase (SaladMsgWrapper << SetBase) (baseToString value) value
     in
     div [] (List.map viewBaseOption [ Lettuce, Spinach, SpringMix ])
 
@@ -273,7 +273,7 @@ viewSelectDressing : Dressing -> Html Msg
 viewSelectDressing currentDressing =
     let
         viewDressingOption value =
-            viewRadioOption "dressing" currentDressing (SaladMsg << SetDressing) (dressingToString value) value
+            viewRadioOption "dressing" currentDressing (SaladMsgWrapper << SetDressing) (dressingToString value) value
     in
     div [] (List.map viewDressingOption [ NoDressing, Italian, RaspberryVinaigrette, OilVinegar ])
 
@@ -310,7 +310,7 @@ viewBuilding model =
         , viewSection "2. Select Toppings" [ viewSelectToppings model.salad.toppings ]
         , viewSection "3. Select Dressing" [ viewSelectDressing model.salad.dressing ]
         , viewSection "4. Enter Contact Info"
-            [ Html.map ContactMsg (viewContactForm model)
+            [ Html.map ContactMsgWrapper (viewContactForm model)
             , button
                 [ class "send-button"
                 , disabled (not (isValid model))
@@ -400,8 +400,8 @@ type ContactMsg
 
 
 type Msg
-    = SaladMsg SaladMsg
-    | ContactMsg ContactMsg
+    = SaladMsgWrapper SaladMsg
+    | ContactMsgWrapper ContactMsg
     | Send
     | SubmissionResult (Result Http.Error String)
 
@@ -469,10 +469,10 @@ updateContact msg contact =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        SaladMsg saladMsg ->
+        SaladMsgWrapper saladMsg ->
             ( { model | salad = updateSalad saladMsg model.salad }, Cmd.none )
 
-        ContactMsg contactMsg ->
+        ContactMsgWrapper contactMsg ->
             ( updateContact contactMsg model, Cmd.none )
 
         Send ->
