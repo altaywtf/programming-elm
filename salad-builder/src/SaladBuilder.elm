@@ -20,7 +20,7 @@ import Html
         , tr
         , ul
         )
-import Html.Attributes exposing (checked, class, disabled, name, selected, type_, value)
+import Html.Attributes exposing (checked, class, disabled, name, type_, value)
 import Html.Events exposing (onCheck, onClick, onInput)
 import Http
 import Json.Encode exposing (Value, list, object, string)
@@ -278,6 +278,30 @@ viewSelectDressing currentDressing =
     div [] (List.map viewDressingOption [ NoDressing, Italian, RaspberryVinaigrette, OilVinegar ])
 
 
+viewTextInput : String -> String -> (String -> msg) -> Html msg
+viewTextInput inputLabel inputValue tagger =
+    div [ class "text-input" ]
+        [ label []
+            [ div [] [ text inputLabel ]
+            , input
+                [ type_ "text"
+                , value inputValue
+                , onInput tagger
+                ]
+                []
+            ]
+        ]
+
+
+viewContactForm : Contact a -> Html ContactMsg
+viewContactForm contact =
+    div []
+        [ viewTextInput "Name" contact.name SetName
+        , viewTextInput "Email" contact.email SetEmail
+        , viewTextInput "Phone" contact.phone SetPhone
+        ]
+
+
 viewBuilding : Model -> Html Msg
 viewBuilding model =
     div []
@@ -286,39 +310,7 @@ viewBuilding model =
         , viewSection "2. Select Toppings" [ viewSelectToppings model.salad.toppings ]
         , viewSection "3. Select Dressing" [ viewSelectDressing model.salad.dressing ]
         , viewSection "4. Enter Contact Info"
-            [ div [ class "text-input" ]
-                [ label []
-                    [ div [] [ text "Name:" ]
-                    , input
-                        [ type_ "text"
-                        , value model.name
-                        , onInput (ContactMsg << SetName)
-                        ]
-                        []
-                    ]
-                ]
-            , div [ class "text-input" ]
-                [ label []
-                    [ div [] [ text "Email:" ]
-                    , input
-                        [ type_ "text"
-                        , value model.email
-                        , onInput (ContactMsg << SetEmail)
-                        ]
-                        []
-                    ]
-                ]
-            , div [ class "text-input" ]
-                [ label []
-                    [ div [] [ text "Phone:" ]
-                    , input
-                        [ type_ "text"
-                        , value model.phone
-                        , onInput (ContactMsg << SetPhone)
-                        ]
-                        []
-                    ]
-                ]
+            [ Html.map ContactMsg (viewContactForm model)
             , button
                 [ class "send-button"
                 , disabled (not (isValid model))
