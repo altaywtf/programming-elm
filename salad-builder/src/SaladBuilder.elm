@@ -278,13 +278,13 @@ viewSelectDressing currentDressing =
     div [] (List.map viewDressingOption [ NoDressing, Italian, RaspberryVinaigrette, OilVinegar ])
 
 
-viewTextInput : String -> String -> (String -> msg) -> Html msg
-viewTextInput inputLabel inputValue tagger =
+viewTextInput : String -> String -> String -> (String -> msg) -> Html msg
+viewTextInput inputType inputLabel inputValue tagger =
     div [ class "text-input" ]
         [ label []
             [ div [] [ text inputLabel ]
             , input
-                [ type_ "text"
+                [ type_ inputType
                 , value inputValue
                 , onInput tagger
                 ]
@@ -296,9 +296,9 @@ viewTextInput inputLabel inputValue tagger =
 viewContactForm : Contact a -> Html ContactMsg
 viewContactForm contact =
     div []
-        [ viewTextInput "Name" contact.name SetName
-        , viewTextInput "Email" contact.email SetEmail
-        , viewTextInput "Phone" contact.phone SetPhone
+        [ viewTextInput "text" "Name" contact.name SetName
+        , viewTextInput "email" "Email" contact.email SetEmail
+        , viewTextInput "tel" "Phone" contact.phone SetPhone
         ]
 
 
