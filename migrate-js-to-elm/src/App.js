@@ -7,11 +7,12 @@
  * Visit http://www.pragmaticprogrammer.com/titles/jfelm for more book information.
  ***/
 import React, { Component } from "react";
+import ImageUpload from "./ImageUpload";
 import "./App.css";
 
 class App extends Component {
-  constructor(props) {
-    super(props);
+  constructor() {
+    super();
 
     this.state = {
       note: this.fetchSavedNote(),
@@ -26,6 +27,7 @@ class App extends Component {
     return {
       title: "",
       contents: "",
+      images: [],
       ...note,
     };
   }
@@ -53,6 +55,10 @@ class App extends Component {
     };
   }
 
+  addImages = (images) => {
+    this.update("images", this.state.note.images.concat(images));
+  };
+
   render() {
     const { note } = this.state;
 
@@ -79,6 +85,11 @@ class App extends Component {
               onChange={this.updateField("contents")}
             />
           </div>
+        </div>
+
+        <div className="note__images">
+          <h2>Images</h2>
+          <ImageUpload images={note.images} onUpload={this.addImages} />
         </div>
       </div>
     );
