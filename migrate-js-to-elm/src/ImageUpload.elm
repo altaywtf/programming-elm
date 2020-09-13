@@ -12,6 +12,11 @@ onChange msg =
     on "change" (succeed msg)
 
 
+type alias Flags =
+    { imageUploaderId : String
+    }
+
+
 type alias Image =
     { url : String
     }
@@ -25,6 +30,7 @@ port receiveImages : (List Image -> msg) -> Sub msg
 
 type alias Model =
     { images : List Image
+    , imageUploaderId : String
     }
 
 
@@ -45,9 +51,9 @@ viewImage image =
 view : Model -> Html Msg
 view model =
     div [ class "image-upload" ]
-        [ label [ for "file-upload" ] [ text "+ Add Images" ]
+        [ label [ for model.imageUploaderId ] [ text "+ Add Images" ]
         , input
-            [ id "file-upload"
+            [ id model.imageUploaderId
             , type_ "file"
             , multiple True
             , onChange UploadImages
@@ -72,12 +78,12 @@ subscriptions model =
     receiveImages ReceiveImages
 
 
-init : () -> ( Model, Cmd Msg )
-init () =
-    ( Model [], Cmd.none )
+init : Flags -> ( Model, Cmd Msg )
+init flags =
+    ( Model [] flags.imageUploaderId, Cmd.none )
 
 
-main : Program () Model Msg
+main : Program Flags Model Msg
 main =
     Browser.element
         { init = init
