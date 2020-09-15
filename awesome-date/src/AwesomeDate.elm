@@ -23,3 +23,24 @@ month (Date date) =
 day : Date -> Int
 day (Date date) =
     date.day
+
+
+isLeapYear : Int -> Bool
+isLeapYear year_ =
+    let
+        isDivisibleBy n =
+            remainderBy n year_ == 0
+    in
+    isDivisibleBy 4 && not (isDivisibleBy 100) || isDivisibleBy 400
+
+
+addYears : Int -> Date -> Date
+addYears years_ (Date date) =
+    Date { date | year = date.year + years_ }
+
+
+toDateString : Date -> String
+toDateString (Date date) =
+    [ date.month, date.day, date.year ]
+        |> List.map String.fromInt
+        |> String.join "/"
