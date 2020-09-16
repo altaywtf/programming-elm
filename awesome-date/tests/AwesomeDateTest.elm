@@ -26,6 +26,11 @@ exampleDate =
     Date.create 2012 6 2
 
 
+leapDate : Date
+leapDate =
+    Date.create 2012 2 29
+
+
 testDateParts : Test
 testDateParts =
     describe "date part getters"
@@ -57,6 +62,8 @@ testAddYears =
     describe "addYears"
         [ test "changes a date's year" <|
             \_ -> Date.addYears 2 exampleDate |> expectDate 2014 6 2
+        , test "prevents leap days on non-leap years" <|
+            \_ -> Date.addYears 1 leapDate |> expectDate 2013 2 28
         ]
 
 

@@ -34,9 +34,19 @@ isLeapYear year_ =
     isDivisibleBy 4 && not (isDivisibleBy 100) || isDivisibleBy 400
 
 
+preventInvalidLeapDates : Date -> Date
+preventInvalidLeapDates (Date date) =
+    if not (isLeapYear date.year) && date.month == 2 && date.day >= 29 then
+        Date { date | day = 28 }
+
+    else
+        Date date
+
+
 addYears : Int -> Date -> Date
 addYears years_ (Date date) =
     Date { date | year = date.year + years_ }
+        |> preventInvalidLeapDates
 
 
 toDateString : Date -> String
