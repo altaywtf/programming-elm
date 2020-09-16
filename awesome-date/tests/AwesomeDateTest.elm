@@ -1,9 +1,9 @@
 module AwesomeDateTest exposing (suite)
 
-import AwesomeDate as Date exposing (Date, year)
+import AwesomeDate as Date exposing (..)
 import Expect
-import Fuzz exposing (Fuzzer, int, intRange)
-import Test exposing (..)
+import Fuzz exposing (int, intRange)
+import Test exposing (Test, describe, fuzz, test)
 
 
 expectDate : Int -> Int -> Int -> Date -> Expect.Expectation
