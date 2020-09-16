@@ -3,7 +3,10 @@ module AppTest exposing (suite)
 import App
 import AwesomeDate as Date exposing (Date)
 import Expect
+import Html.Attributes exposing (type_, value)
 import Test exposing (..)
+import Test.Html.Query as Query
+import Test.Html.Selector exposing (attribute, id, tag, text)
 
 
 selectedDate : Date
@@ -72,7 +75,44 @@ testUpdate =
 
 testView : Test
 testView =
-    todo "implement view tests"
+    describe "view"
+        [ test "displays the selected date" <|
+            \_ ->
+                App.view initialModel
+                    |> Query.fromHtml
+                    |> Query.find [ tag "input", attribute (type_ "date") ]
+                    |> Query.has [ attribute (value "2012-06-02") ]
+        , test "displays the weekday" <|
+            \_ ->
+                App.view initialModel
+                    |> Query.fromHtml
+                    |> Query.find [ id "info-weekday" ]
+                    |> Query.has [ text "Saturday" ]
+        , test "displays the days in month" <|
+            \_ ->
+                App.view initialModel
+                    |> Query.fromHtml
+                    |> Query.find [ id "info-days" ]
+                    |> Query.has [ text "30" ]
+        , test "displays the leap year state" <|
+            \_ ->
+                App.view initialModel
+                    |> Query.fromHtml
+                    |> Query.find [ id "info-leap-year" ]
+                    |> Query.has [ text "Yes" ]
+        , test "displays the date part inputs with correct values" <|
+            \_ ->
+                App.view initialModel
+                    |> Query.fromHtml
+                    |> Query.find [ id "offset-years" ]
+                    |> Query.has [ attribute (value "0") ]
+        , test "displays the date part inputs with correct values, when there is an offset" <|
+            \_ ->
+                App.view modelWithDateOffsets
+                    |> Query.fromHtml
+                    |> Query.find [ id "offset-years" ]
+                    |> Query.has [ attribute (value "3") ]
+        ]
 
 
 testEvents : Test
