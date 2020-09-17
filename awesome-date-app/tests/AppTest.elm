@@ -5,6 +5,7 @@ import AwesomeDate as Date exposing (Date)
 import Expect
 import Html.Attributes exposing (type_, value)
 import Test exposing (..)
+import Test.Html.Event as Event
 import Test.Html.Query as Query
 import Test.Html.Selector exposing (attribute, id, tag, text)
 
@@ -117,7 +118,22 @@ testView =
 
 testEvents : Test
 testEvents =
-    todo "implement event tests"
+    describe "events"
+        [ test "receives selected date changes" <|
+            \_ ->
+                App.view initialModel
+                    |> Query.fromHtml
+                    |> Query.find [ tag "input", attribute (type_ "date") ]
+                    |> Event.simulate (Event.input "2015-09-21")
+                    |> Event.expect (selectDate futureDate)
+        , test "receives year offset changes" <|
+            \_ ->
+                App.view initialModel
+                    |> Query.fromHtml
+                    |> Query.find [ tag "input", id "offset-years" ]
+                    |> Event.simulate (Event.input "3")
+                    |> Event.expect (changeDateOffset App.Years 3)
+        ]
 
 
 suite : Test
