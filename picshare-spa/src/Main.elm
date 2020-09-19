@@ -1,7 +1,9 @@
 module Main exposing (main)
 
+import Account
 import Browser exposing (Document, UrlRequest)
 import Browser.Navigation as Navigation
+import Feed as PublicFeed
 import Html exposing (Html, a, div, h1, i, text)
 import Html.Attributes exposing (class)
 import Json.Decode exposing (maybe)
@@ -10,8 +12,8 @@ import Url exposing (Url)
 
 
 type Page
-    = PublicFeed
-    | Account
+    = PublicFeed PublicFeed.Model
+    | Account Account.Model
     | NotFound
 
 
@@ -44,11 +46,17 @@ init () url navigationKey =
 viewContent : Page -> ( String, Html Msg )
 viewContent page =
     case page of
-        PublicFeed ->
-            ( "Picshare", h1 [] [ text "Public feed" ] )
+        PublicFeed publicFeedModel ->
+            ( "Picshare"
+            , PublicFeed.view publicFeedModel
+                |> Html.map PublicFeedMsgWrapper
+            )
 
-        Account ->
-            ( "Account", h1 [] [ text "Account" ] )
+        Account accountModel ->
+            ( "Account"
+            , Account.view accountModel
+                |> Html.map AccountMsgWrapper
+            )
 
         NotFound ->
             ( "Not found", div [ class "not-found" ] [ h1 [] [ text "Page not found" ] ] )
@@ -72,16 +80,30 @@ view model =
 type Msg
     = NewRoute (Maybe Routes.Route)
     | Visit UrlRequest
+    | AccountMsgWrapper Account.Msg
+    | PublicFeedMsgWrapper PublicFeed.Msg
 
 
 setNewPage : Maybe Routes.Route -> Model -> ( Model, Cmd Msg )
 setNewPage maybeRoute model =
     case maybeRoute of
         Just Routes.Home ->
-            ( { model | page = PublicFeed }, Cmd.none )
+            let
+                ( publicFeedModel, publicFeedCmd ) =
+                    PublicFeed.init ()
+            in
+            ( { model | page = PublicFeed publicFeedModel }
+            , Cmd.map PublicFeedMsgWrapper publicFeedCmd
+            )
 
         Just Routes.Account ->
-            ( { model | page = Account }, Cmd.none )
+            let
+                ( accountModel, accountCmd ) =
+                    Account.init
+            in
+            ( { model | page = Account accountModel }
+            , Cmd.map AccountMsgWrapper accountCmd
+            )
 
         Nothing ->
             ( { model | page = NotFound }, Cmd.none )
@@ -89,9 +111,27 @@ setNewPage maybeRoute model =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg of
-        NewRoute maybeRoute ->
+    case ( msg, model.page ) of
+        ( NewRoute maybeRoute, _ ) ->
             setNewPage maybeRoute model
+
+        ( AccountMsgWrapper accountMsg, Account accountModel ) ->
+            let
+                ( updatedModel, cmd ) =
+                    Account.update accountMsg accountModel
+            in
+            ( { model | page = Account updatedModel }
+            , Cmd.map AccountMsgWrapper cmd
+            )
+
+        ( PublicFeedMsgWrapper publicFeedMsg, PublicFeed publicFeedModel ) ->
+            let
+                ( updatedModel, cmd ) =
+                    PublicFeed.update publicFeedMsg publicFeedModel
+            in
+            ( { model | page = PublicFeed updatedModel }
+            , Cmd.map PublicFeedMsgWrapper cmd
+            )
 
         _ ->
             ( model, Cmd.none )
@@ -99,7 +139,13 @@ update msg model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    case model.page of
+        PublicFeed publicFeedModel ->
+            PublicFeed.subscriptions publicFeedModel
+                |> Sub.map PublicFeedMsgWrapper
+
+        _ ->
+            Sub.none
 
 
 
