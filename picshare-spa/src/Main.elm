@@ -7,7 +7,7 @@ import Feed as PublicFeed
 import Html exposing (Html, a, div, h1, i, text)
 import Html.Attributes exposing (class)
 import Json.Decode exposing (maybe)
-import Routes exposing (Route, match)
+import Routes
 import Url exposing (Url)
 
 
@@ -43,6 +43,16 @@ init () url navigationKey =
 ---- VIEW ----
 
 
+viewHeader : Html Msg
+viewHeader =
+    div [ class "header" ]
+        [ div [ class "header-nav" ]
+            [ a [ class "nav-brand", Routes.href Routes.Home ] [ text "Picshare" ]
+            , a [ class "nav-account", Routes.href Routes.Account ] [ i [ class "fa fa-2x fa-gear" ] [] ]
+            ]
+        ]
+
+
 viewContent : Page -> ( String, Html Msg )
 viewContent page =
     case page of
@@ -69,7 +79,7 @@ view model =
             viewContent model.page
     in
     { title = title
-    , body = [ content ]
+    , body = [ viewHeader, content ]
     }
 
 
@@ -132,6 +142,9 @@ update msg model =
             ( { model | page = PublicFeed updatedModel }
             , Cmd.map PublicFeedMsgWrapper cmd
             )
+
+        ( Visit (Browser.Internal url), _ ) ->
+            ( model, Navigation.pushUrl model.navigationKey (Url.toString url) )
 
         _ ->
             ( model, Cmd.none )

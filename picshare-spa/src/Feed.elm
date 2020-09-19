@@ -207,9 +207,7 @@ viewContent model =
 view : Model -> Html Msg
 view model =
     div []
-        [ div [ class "header" ]
-            [ h1 [] [ text "Picshare" ] ]
-        , div [ class "content-flow" ]
+        [ div [ class "content-flow" ]
             [ viewContent model ]
         ]
 
