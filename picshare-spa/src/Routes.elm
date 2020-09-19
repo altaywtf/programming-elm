@@ -1,5 +1,7 @@
-module Routes exposing (Route(..), match)
+module Routes exposing (Route(..), href, match)
 
+import Html
+import Html.Attributes
 import Url exposing (Url)
 import Url.Parser as Parser exposing (Parser)
 
@@ -20,3 +22,18 @@ routes =
 match : Url -> Maybe Route
 match url =
     Parser.parse routes url
+
+
+navigateToUrl : Route -> String
+navigateToUrl route =
+    case route of
+        Home ->
+            "/"
+
+        Account ->
+            "/account"
+
+
+href : Route -> Html.Attribute msg
+href route =
+    Html.Attributes.href (navigateToUrl route)
