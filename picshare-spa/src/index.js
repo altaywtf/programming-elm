@@ -28,6 +28,15 @@ const listen = (url) => {
 
 app.ports.listen.subscribe(listen);
 
+const close = () => {
+  if (socket) {
+    socket.close();
+    socket = null;
+  }
+};
+
+app.ports.close.subscribe(close);
+
 // If you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.
 // Learn more about service workers: https://bit.ly/CRA-PWA

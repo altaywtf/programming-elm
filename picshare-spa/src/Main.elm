@@ -9,6 +9,7 @@ import Html.Attributes exposing (class)
 import Json.Decode exposing (maybe)
 import Routes
 import Url exposing (Url)
+import WebSocket
 
 
 type Page
@@ -123,7 +124,11 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case ( msg, model.page ) of
         ( NewRoute maybeRoute, _ ) ->
-            setNewPage maybeRoute model
+            let
+                ( updatedModel, cmd ) =
+                    setNewPage maybeRoute model
+            in
+            ( updatedModel, Cmd.batch [ cmd, WebSocket.close () ] )
 
         ( AccountMsgWrapper accountMsg, Account accountModel ) ->
             let
