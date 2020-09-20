@@ -3,10 +3,9 @@ module Main exposing (main)
 import Account
 import Browser exposing (Document, UrlRequest)
 import Browser.Navigation as Navigation
-import Feed as PublicFeed
 import Html exposing (Html, a, div, h1, i, text)
 import Html.Attributes exposing (class)
-import Json.Decode exposing (maybe)
+import PublicFeed
 import Routes
 import Url exposing (Url)
 import WebSocket
@@ -101,7 +100,7 @@ setNewPage maybeRoute model =
         Just Routes.Home ->
             let
                 ( publicFeedModel, publicFeedCmd ) =
-                    PublicFeed.init ()
+                    PublicFeed.init
             in
             ( { model | page = PublicFeed publicFeedModel }
             , Cmd.map PublicFeedMsgWrapper publicFeedCmd

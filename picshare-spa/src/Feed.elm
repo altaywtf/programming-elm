@@ -19,6 +19,7 @@ type alias Photo =
     , caption : String
     , liked : Bool
     , comments : List String
+    , username : String
     , newComment : String
     }
 
@@ -31,6 +32,7 @@ type alias Model =
     { feed : Maybe Feed
     , error : Maybe Http.Error
     , streamQueue : Feed
+    , wsUrl : Maybe String
     }
 
 
@@ -42,36 +44,28 @@ photoDecoder =
         |> required "caption" string
         |> required "liked" bool
         |> required "comments" (list string)
+        |> required "username" string
         |> hardcoded ""
 
 
-baseUrl : String
-baseUrl =
-    "https://programming-elm.com/"
-
-
-wsUrl : String
-wsUrl =
-    "wss://programming-elm.com/"
-
-
-initialModel : Model
-initialModel =
+initialModel : Maybe String -> Model
+initialModel wsUrl =
     { feed = Nothing
     , error = Nothing
     , streamQueue = []
+    , wsUrl = wsUrl
     }
 
 
-init : () -> ( Model, Cmd Msg )
-init () =
-    ( initialModel, fetchFeed )
+init : { feedUrl : String, wsUrl : Maybe String } -> ( Model, Cmd Msg )
+init { feedUrl, wsUrl } =
+    ( initialModel wsUrl, fetchFeed feedUrl )
 
 
-fetchFeed : Cmd Msg
-fetchFeed =
+fetchFeed : String -> Cmd Msg
+fetchFeed url =
     Http.get
-        { url = baseUrl ++ "feed"
+        { url = url
         , expect = Http.expectJson LoadFeed (list photoDecoder)
         }
 
@@ -143,6 +137,9 @@ viewDetailedPhoto photo =
         , div [ class "photo-info" ]
             [ viewLoveButton photo
             , h2 [ class "caption" ] [ text photo.caption ]
+            , h3 [ class "username" ]
+                [ a [] [ text ("@" ++ photo.username) ]
+                ]
             , viewComments photo
             ]
         ]
@@ -266,6 +263,16 @@ updateFeed updatePhoto id maybeFeed =
     Maybe.map (updatePhotoById updatePhoto id) maybeFeed
 
 
+listenForNewPhotos : Maybe String -> Cmd Msg
+listenForNewPhotos maybeWsUrl =
+    case maybeWsUrl of
+        Just wsUrl ->
+            WebSocket.listen wsUrl
+
+        Nothing ->
+            Cmd.none
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -292,7 +299,7 @@ update msg model =
 
         LoadFeed (Ok feed) ->
             ( { model | feed = Just feed }
-            , WebSocket.listen wsUrl
+            , listenForNewPhotos model.wsUrl
             )
 
         LoadFeed (Err error) ->
