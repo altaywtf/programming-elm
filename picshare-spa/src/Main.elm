@@ -102,33 +102,32 @@ type Msg
     | UserFeedMsgWrapper UserFeed.Msg
 
 
+processPageUpdate :
+    (pageModel -> Page)
+    -> (pageMsg -> Msg)
+    -> Model
+    -> ( pageModel, Cmd pageMsg )
+    -> ( Model, Cmd Msg )
+processPageUpdate createPage wrapMsg model ( pageModel, pageCmd ) =
+    ( { model | page = createPage pageModel }
+    , Cmd.map wrapMsg pageCmd
+    )
+
+
 setNewPage : Maybe Routes.Route -> Model -> ( Model, Cmd Msg )
 setNewPage maybeRoute model =
     case maybeRoute of
         Just Routes.Home ->
-            let
-                ( publicFeedModel, publicFeedCmd ) =
-                    PublicFeed.init
-            in
-            ( { model | page = PublicFeed publicFeedModel }
-            , Cmd.map PublicFeedMsgWrapper publicFeedCmd
-            )
+            PublicFeed.init
+                |> processPageUpdate PublicFeed PublicFeedMsgWrapper model
 
         Just Routes.Account ->
-            let
-                ( accountModel, accountCmd ) =
-                    Account.init
-            in
-            ( { model | page = Account accountModel }
-            , Cmd.map AccountMsgWrapper accountCmd
-            )
+            Account.init
+                |> processPageUpdate Account AccountMsgWrapper model
 
         Just (Routes.UserFeed username) ->
-            let
-                ( userFeedModel, userFeedCmd ) =
-                    UserFeed.init username
-            in
-            ( { model | page = UserFeed username userFeedModel }, Cmd.map UserFeedMsgWrapper userFeedCmd )
+            UserFeed.init username
+                |> processPageUpdate (UserFeed username) UserFeedMsgWrapper model
 
         Nothing ->
             ( { model | page = NotFound }, Cmd.none )
@@ -142,37 +141,24 @@ update msg model =
                 ( updatedModel, cmd ) =
                     setNewPage maybeRoute model
             in
-            ( updatedModel, Cmd.batch [ cmd, WebSocket.close () ] )
-
-        ( AccountMsgWrapper accountMsg, Account accountModel ) ->
-            let
-                ( updatedModel, cmd ) =
-                    Account.update accountMsg accountModel
-            in
-            ( { model | page = Account updatedModel }
-            , Cmd.map AccountMsgWrapper cmd
-            )
-
-        ( PublicFeedMsgWrapper publicFeedMsg, PublicFeed publicFeedModel ) ->
-            let
-                ( updatedModel, cmd ) =
-                    PublicFeed.update publicFeedMsg publicFeedModel
-            in
-            ( { model | page = PublicFeed updatedModel }
-            , Cmd.map PublicFeedMsgWrapper cmd
-            )
-
-        ( UserFeedMsgWrapper userFeedMsg, UserFeed username userFeedModel ) ->
-            let
-                ( updatedModel, cmd ) =
-                    UserFeed.update userFeedMsg userFeedModel
-            in
-            ( { model | page = UserFeed username updatedModel }
-            , Cmd.map UserFeedMsgWrapper cmd
+            ( updatedModel
+            , Cmd.batch [ cmd, WebSocket.close () ]
             )
 
         ( Visit (Browser.Internal url), _ ) ->
             ( model, Navigation.pushUrl model.navigationKey (Url.toString url) )
+
+        ( PublicFeedMsgWrapper publicFeedMsg, PublicFeed publicFeedModel ) ->
+            PublicFeed.update publicFeedMsg publicFeedModel
+                |> processPageUpdate PublicFeed PublicFeedMsgWrapper model
+
+        ( AccountMsgWrapper accountMsg, Account accountModel ) ->
+            Account.update accountMsg accountModel
+                |> processPageUpdate Account AccountMsgWrapper model
+
+        ( UserFeedMsgWrapper userFeedMsg, UserFeed username userFeedModel ) ->
+            UserFeed.update userFeedMsg userFeedModel
+                |> processPageUpdate (UserFeed username) UserFeedMsgWrapper model
 
         _ ->
             ( model, Cmd.none )
