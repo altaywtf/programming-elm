@@ -3,12 +3,13 @@ module Routes exposing (Route(..), href, match)
 import Html
 import Html.Attributes
 import Url exposing (Url)
-import Url.Parser as Parser exposing (Parser)
+import Url.Parser as Parser exposing ((</>), Parser)
 
 
 type Route
     = Home
     | Account
+    | UserFeed String
 
 
 routes : Parser (Route -> a) a
@@ -16,6 +17,7 @@ routes =
     Parser.oneOf
         [ Parser.map Home Parser.top
         , Parser.map Account (Parser.s "account")
+        , Parser.map UserFeed (Parser.s "user" </> Parser.string </> Parser.s "feed")
         ]
 
 
@@ -32,6 +34,9 @@ navigateToUrl route =
 
         Account ->
             "/account"
+
+        UserFeed username ->
+            "/user/" ++ username ++ "/feed"
 
 
 href : Route -> Html.Attribute msg

@@ -8,11 +8,13 @@ import Html.Attributes exposing (class)
 import PublicFeed
 import Routes
 import Url exposing (Url)
+import UserFeed
 import WebSocket
 
 
 type Page
     = PublicFeed PublicFeed.Model
+    | UserFeed String UserFeed.Model
     | Account Account.Model
     | NotFound
 
@@ -62,6 +64,11 @@ viewContent page =
                 |> Html.map PublicFeedMsgWrapper
             )
 
+        UserFeed username userFeedModel ->
+            ( "User Feed for @" ++ username
+            , UserFeed.view userFeedModel |> Html.map UserFeedMsgWrapper
+            )
+
         Account accountModel ->
             ( "Account"
             , Account.view accountModel
@@ -92,6 +99,7 @@ type Msg
     | Visit UrlRequest
     | AccountMsgWrapper Account.Msg
     | PublicFeedMsgWrapper PublicFeed.Msg
+    | UserFeedMsgWrapper UserFeed.Msg
 
 
 setNewPage : Maybe Routes.Route -> Model -> ( Model, Cmd Msg )
@@ -114,6 +122,13 @@ setNewPage maybeRoute model =
             ( { model | page = Account accountModel }
             , Cmd.map AccountMsgWrapper accountCmd
             )
+
+        Just (Routes.UserFeed username) ->
+            let
+                ( userFeedModel, userFeedCmd ) =
+                    UserFeed.init username
+            in
+            ( { model | page = UserFeed username userFeedModel }, Cmd.map UserFeedMsgWrapper userFeedCmd )
 
         Nothing ->
             ( { model | page = NotFound }, Cmd.none )
@@ -145,6 +160,15 @@ update msg model =
             in
             ( { model | page = PublicFeed updatedModel }
             , Cmd.map PublicFeedMsgWrapper cmd
+            )
+
+        ( UserFeedMsgWrapper userFeedMsg, UserFeed username userFeedModel ) ->
+            let
+                ( updatedModel, cmd ) =
+                    UserFeed.update userFeedMsg userFeedModel
+            in
+            ( { model | page = UserFeed username updatedModel }
+            , Cmd.map UserFeedMsgWrapper cmd
             )
 
         ( Visit (Browser.Internal url), _ ) ->

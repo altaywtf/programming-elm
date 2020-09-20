@@ -6,6 +6,7 @@ import Html.Events exposing (onClick, onInput, onSubmit)
 import Http
 import Json.Decode exposing (Decoder, bool, decodeString, int, list, string, succeed)
 import Json.Decode.Pipeline exposing (hardcoded, required)
+import Routes
 import WebSocket
 
 
@@ -138,7 +139,7 @@ viewDetailedPhoto photo =
             [ viewLoveButton photo
             , h2 [ class "caption" ] [ text photo.caption ]
             , h3 [ class "username" ]
-                [ a [] [ text ("@" ++ photo.username) ]
+                [ a [ Routes.href (Routes.UserFeed photo.username) ] [ text ("@" ++ photo.username) ]
                 ]
             , viewComments photo
             ]

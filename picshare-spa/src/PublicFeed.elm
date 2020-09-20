@@ -1,6 +1,6 @@
 module PublicFeed exposing (Model, Msg, init, subscriptions, update, view)
 
-import Feed exposing (view)
+import Feed
 import Html exposing (Html)
 
 
